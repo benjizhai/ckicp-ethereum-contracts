@@ -1,6 +1,11 @@
 [profile.default]
 src = "src"
+test = "test"
 out = "out"
 libs = ["lib"]
+optimizer = true
+optimizer_runs = 1000000
+eth_rpc_url = "https://goerli.infura.io/v3/8d199f2623104e07b44e3c3de36e9382"
+chain_id = 5
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

@@ -3,10 +3,11 @@ pragma solidity ^0.8.20;
 
 import "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
+import "openzeppelin-contracts/security/Pausable.sol";
 import "openzeppelin-contracts/security/ReentrancyGuard.sol";
 import "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 
-contract CkIcp is ERC20, Ownable, ReentrancyGuard {
+contract CkIcp is ERC20, Ownable, Pausable, ReentrancyGuard {
     using ECDSA for bytes32;
 
     uint8 public constant ICP_TOKEN_PRECISION = 8;
@@ -30,12 +31,12 @@ contract CkIcp is ERC20, Ownable, ReentrancyGuard {
 
     /// Burn input amount is demoninated in wei
     /// Burn output amount is denominated in ICP e8s
-    function burn(uint256 amount, bytes32 principal, bytes32 subaccount) public {
+    function burn(uint256 amount, bytes32 principal, bytes32 subaccount) public whenNotPaused {
         _burn(_msgSender(), amount);
         emit BurnToIcp(amount / 10**(decimals() - ICP_TOKEN_PRECISION), principal, subaccount);
     }
 
-    function burnToAccountId(uint256 amount, bytes32 accountId) public {
+    function burnToAccountId(uint256 amount, bytes32 accountId) public whenNotPaused {
         _burn(_msgSender(), amount);
         emit BurnToIcpAccountId(amount / 10**(decimals() - ICP_TOKEN_PRECISION), accountId);
     }

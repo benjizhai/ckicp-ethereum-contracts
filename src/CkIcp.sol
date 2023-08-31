@@ -9,6 +9,8 @@ import "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 contract CkIcp is ERC20, Ownable, ReentrancyGuard {
     using ECDSA for bytes32;
 
+    uint8 public constant ICP_TOKEN_PRECISION = 8;
+
     event BurnToIcp(uint256 amount, bytes32 indexed principal, bytes32 indexed subaccount);
     
     constructor()
@@ -24,6 +26,7 @@ contract CkIcp is ERC20, Ownable, ReentrancyGuard {
     /// # Public functions
 
     function burn(uint256 amount, bytes32 principal, bytes32 subaccount) public {
+        require(amount % 10**(decimals() - ICP_TOKEN_PRECISION) == 0, "Amount must not have significant figures beyond ICP token precision");
         _burn(_msgSender(), amount);
         emit BurnToIcp(amount, principal, subaccount);
     }

@@ -20,12 +20,16 @@ contract CkIcp is ERC20, Ownable, ReentrancyGuard {
 
     /// # Admin functions accessible to ckICP canister only
 
+    /// Mint input amount is denominated in ICP e8s
+    /// Mint output amount is denominated in wei
     function mint(address to, uint256 amount) public onlyOwner {
-        _mint(to, amount);
+        _mint(to, amount * 10**(decimals() - ICP_TOKEN_PRECISION));
     }
 
     /// # Public functions
 
+    /// Burn input amount is demoninated in wei
+    /// Burn output amount is denominated in ICP e8s
     function burn(uint256 amount, bytes32 principal, bytes32 subaccount) public {
         _burn(_msgSender(), amount);
         emit BurnToIcp(amount / 10**(decimals() - ICP_TOKEN_PRECISION), principal, subaccount);
@@ -38,7 +42,7 @@ contract CkIcp is ERC20, Ownable, ReentrancyGuard {
 
     /// # Overrides
     function _mint(address to, uint256 amount) internal override(ERC20) {
-        super._mint(to, amount * 10**(decimals() - ICP_TOKEN_PRECISION));
+        super._mint(to, amount);
     }
 
     function _burn(address from, uint256 amount) internal override(ERC20) {

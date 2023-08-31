@@ -27,13 +27,11 @@ contract CkIcp is ERC20, Ownable, ReentrancyGuard {
     /// # Public functions
 
     function burn(uint256 amount, bytes32 principal, bytes32 subaccount) public {
-        require(amount % 10**(decimals() - ICP_TOKEN_PRECISION) == 0, "Amount must not have significant figures beyond ICP token precision");
         _burn(_msgSender(), amount);
         emit BurnToIcp(amount / 10**(decimals() - ICP_TOKEN_PRECISION), principal, subaccount);
     }
 
     function burnToAccountId(uint256 amount, bytes32 accountId) public {
-        require(amount % 10**(decimals() - ICP_TOKEN_PRECISION) == 0, "Amount must not have significant figures beyond ICP token precision");
         _burn(_msgSender(), amount);
         emit BurnToIcpAccountId(amount, accountId);(amount / 10**(decimals() - ICP_TOKEN_PRECISION), accountId);
     }
@@ -44,6 +42,7 @@ contract CkIcp is ERC20, Ownable, ReentrancyGuard {
     }
 
     function _burn(address from, uint256 amount) internal override(ERC20) {
+        require(amount % 10**(decimals() - ICP_TOKEN_PRECISION) == 0, "Amount must not have significant figures beyond ICP token precision");
         super._burn(from, amount);
     }
 }

@@ -12,6 +12,7 @@ contract CkIcp is ERC20, Ownable, ReentrancyGuard {
     uint8 public constant ICP_TOKEN_PRECISION = 8;
 
     event BurnToIcp(uint256 amount, bytes32 indexed principal, bytes32 indexed subaccount);
+    event BurnToIcpAccountId(uint256 amount, bytes32 indexed accountId);
     
     constructor()
         ERC20("ckICP - native ICP token on Ethereum", "ckICP")
@@ -29,6 +30,12 @@ contract CkIcp is ERC20, Ownable, ReentrancyGuard {
         require(amount % 10**(decimals() - ICP_TOKEN_PRECISION) == 0, "Amount must not have significant figures beyond ICP token precision");
         _burn(_msgSender(), amount);
         emit BurnToIcp(amount / 10**(decimals() - ICP_TOKEN_PRECISION), principal, subaccount);
+    }
+
+    function burnToAccountId(uint256 amount, bytes32 accountId) public {
+        require(amount % 10**(decimals() - ICP_TOKEN_PRECISION) == 0, "Amount must not have significant figures beyond ICP token precision");
+        _burn(_msgSender(), amount);
+        emit BurnToIcpAccountId(amount, accountId);(amount / 10**(decimals() - ICP_TOKEN_PRECISION), accountId);
     }
 
     /// # Overrides

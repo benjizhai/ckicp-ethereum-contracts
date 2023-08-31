@@ -38,7 +38,7 @@ contract CkIcp is ERC20, Ownable, ReentrancyGuard {
 
     /// # Overrides
     function _mint(address to, uint256 amount) internal override(ERC20) {
-        super._mint(to, amount);
+        super._mint(to, amount * 10**(decimals() - ICP_TOKEN_PRECISION));
     }
 
     function _burn(address from, uint256 amount) internal override(ERC20) {

@@ -28,7 +28,7 @@ contract CkIcp is ERC20, Ownable, ReentrancyGuard {
     function burn(uint256 amount, bytes32 principal, bytes32 subaccount) public {
         require(amount % 10**(decimals() - ICP_TOKEN_PRECISION) == 0, "Amount must not have significant figures beyond ICP token precision");
         _burn(_msgSender(), amount);
-        emit BurnToIcp(amount, principal, subaccount);
+        emit BurnToIcp(amount / 10**(decimals() - ICP_TOKEN_PRECISION), principal, subaccount);
     }
 
     /// # Overrides

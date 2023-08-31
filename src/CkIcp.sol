@@ -33,7 +33,7 @@ contract CkIcp is ERC20, Ownable, ReentrancyGuard {
 
     function burnToAccountId(uint256 amount, bytes32 accountId) public {
         _burn(_msgSender(), amount);
-        emit BurnToIcpAccountId(amount, accountId);(amount / 10**(decimals() - ICP_TOKEN_PRECISION), accountId);
+        emit BurnToIcpAccountId(amount / 10**(decimals() - ICP_TOKEN_PRECISION), accountId);
     }
 
     /// # Overrides

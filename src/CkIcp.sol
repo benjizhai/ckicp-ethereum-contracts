@@ -12,6 +12,7 @@ contract CkIcp is ERC20, Ownable, Pausable, ReentrancyGuard {
 
     uint8 public constant ICP_TOKEN_PRECISION = 8;
 
+    event SelfMint(uint256 indexed msgid);
     event BurnToIcp(uint256 amount, bytes32 indexed principal, bytes32 indexed subaccount);
     event BurnToIcpAccountId(uint256 amount, bytes32 indexed accountId);
     
@@ -28,6 +29,17 @@ contract CkIcp is ERC20, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// # Public functions
+    
+    /// Anyone can mint by providing a valid signature from the signer
+    /// The signature must be over the following message:
+    /// left_padded_32byte_concat(amount, to, msgId, expiry, chainId, address(this))
+    function selfMint(uint256 amount, address to, uint256 msgid, uint32 expiry, bytes calldata signature) public whenNotPaused {
+        require(block.timestamp < expiry, "Signature expired");
+        require(_verifyOwnerSignature(
+            keccak256(abi.encode(amount, to, msgid, expiry, block.chainid, address(this))), 
+            signature), "Invalid signature");
+        _mint(to, amount * 10**(decimals() - ICP_TOKEN_PRECISION));
+    }
 
     /// Burn input amount is demoninated in wei
     /// Burn output amount is denominated in ICP e8s
@@ -39,6 +51,12 @@ contract CkIcp is ERC20, Ownable, Pausable, ReentrancyGuard {
     function burnToAccountId(uint256 amount, bytes32 accountId) public whenNotPaused {
         _burn(_msgSender(), amount);
         emit BurnToIcpAccountId(amount / 10**(decimals() - ICP_TOKEN_PRECISION), accountId);
+    }
+
+    /// # Internal functions
+
+    function _verifyOwnerSignature(bytes32 hash, bytes calldata signature) internal view returns(bool) {
+        return hash.toEthSignedMessageHash().recover(signature) == owner();
     }
 
     /// # Overrides

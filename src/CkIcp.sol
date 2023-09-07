@@ -11,6 +11,7 @@ contract CkIcp is ERC20, Ownable, Pausable, ReentrancyGuard {
     using ECDSA for bytes32;
 
     uint8 public constant ICP_TOKEN_PRECISION = 8;
+    mapping(uint256 => bool) public used;
 
     event SelfMint(uint256 indexed msgid);
     event BurnToIcp(uint256 amount, bytes32 indexed principal, bytes32 indexed subaccount);
@@ -33,11 +34,14 @@ contract CkIcp is ERC20, Ownable, Pausable, ReentrancyGuard {
     /// Anyone can mint by providing a valid signature from the signer
     /// The signature must be over the following message:
     /// left_padded_32byte_concat(amount, to, msgId, expiry, chainId, address(this))
+    /// Safety note: won't be frontrun because `to` is specified
     function selfMint(uint256 amount, address to, uint256 msgid, uint32 expiry, bytes calldata signature) public whenNotPaused {
         require(block.timestamp < expiry, "Signature expired");
+        require(!used[msgid], "MsgId already used");
         require(_verifyOwnerSignature(
             keccak256(abi.encode(amount, to, msgid, expiry, block.chainid, address(this))), 
             signature), "Invalid signature");
+        used[msgid] = true;
         _mint(to, amount * 10**(decimals() - ICP_TOKEN_PRECISION));
     }
 

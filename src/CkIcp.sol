@@ -19,8 +19,8 @@ contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable, ReentrancyGuard {
     event BurnToIcpAccountId(uint256 amount, bytes32 indexed accountId);
     
     constructor()
-        ERC20("ckICP", "ckICP")
-        ERC20Permit("ckICP")
+        ERC20("ckICP - native ICP token on Ethereum", "ckICP")
+        ERC20Permit("ckICP - native ICP token on Ethereum")
     {}
 
     /// # Admin functions accessible to ckICP canister only

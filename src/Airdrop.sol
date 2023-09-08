@@ -14,28 +14,28 @@ contract Airdrop is Ownable, ReentrancyGuard {
         token = _token;
     }
 
-    function airdrop(address[] calldata _recipients, uint256[] calldata _amounts) external onlyOwner nonReentrant {
-        require(_recipients.length == _amounts.length, "Airdrop: Invalid input");
-        for (uint256 i = 0; i < _recipients.length; i++) {
-            TransferHelper.safeTransfer(address(token), _recipients[i], _amounts[i]);
+    function airdrop(address[] calldata recipients, uint256[] calldata amounts) external onlyOwner nonReentrant {
+        require(recipients.length == amounts.length, "Airdrop: Invalid input");
+        for (uint256 i = 0; i < recipients.length; i++) {
+            TransferHelper.safeTransfer(address(token), recipients[i], amounts[i]);
         }
     }
 
-    function airdropPreset(address[] calldata _recipients) external onlyOwner nonReentrant {
-        for (uint256 i = 0; i < _recipients.length; i++) {
-            TransferHelper.safeTransfer(address(token), _recipients[i], preset_amount);
+    function airdropPreset(address[] calldata recipients) external onlyOwner nonReentrant {
+        for (uint256 i = 0; i < recipients.length; i++) {
+            TransferHelper.safeTransfer(address(token), recipients[i], preset_amount);
         }
     }
 
-    function setPresetAmount(uint256 _amount) external onlyOwner {
-        preset_amount = _amount;
+    function setPresetAmount(uint256 amount) external onlyOwner {
+        preset_amount = amount;
     }
 
     function setTokenAddress(IERC20 _token) external onlyOwner {
         token = _token;
     }
 
-    function withdraw(address _token, address _to, uint256 _amount) external onlyOwner nonReentrant {
-        TransferHelper.safeTransfer(_token, _to, _amount);
+    function withdraw(address _token, address to, uint256 amount) external onlyOwner nonReentrant {
+        TransferHelper.safeTransfer(_token, to, amount);
     }
 }

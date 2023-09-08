@@ -35,7 +35,4 @@ contract Airdrop is Ownable, ReentrancyGuard {
         token = _token;
     }
 
-    function withdraw(address _token, address to, uint256 amount) external onlyOwner nonReentrant {
-        TransferHelper.safeTransfer(_token, to, amount);
-    }
 }

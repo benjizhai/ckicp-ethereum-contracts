@@ -21,7 +21,7 @@ contract Airdrop is Ownable, ReentrancyGuard {
         }
     }
 
-    function airdropPreset(address[] calldata recipients) external onlyOwner nonReentrant {
+    function airdropPresetAmount(address[] calldata recipients) external onlyOwner nonReentrant {
         for (uint256 i = 0; i < recipients.length; i++) {
             TransferHelper.safeTransfer(address(token), recipients[i], preset_amount);
         }

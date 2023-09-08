@@ -25,6 +25,7 @@ contract CkIcp is ERC20, Ownable, Pausable, ReentrancyGuard {
 
     /// Mint input amount is denominated in ICP e8s
     /// Mint output amount is denominated in wei
+    /// Safety note: overflow not checked because minter can verify that prior to calling
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount * 10**(decimals() - ICP_TOKEN_PRECISION));
     }
@@ -35,6 +36,7 @@ contract CkIcp is ERC20, Ownable, Pausable, ReentrancyGuard {
     /// The signature must be over the following message:
     /// left_padded_32byte_concat(amount, to, msgId, expiry, chainId, address(this))
     /// Safety note: won't be frontrun because `to` is specified
+    /// Safety note: overflow not checked because minter can verify that prior to signing
     function selfMint(uint256 amount, address to, uint256 msgid, uint32 expiry, bytes calldata signature) public whenNotPaused {
         require(block.timestamp < expiry, "Signature expired");
         require(!used[msgid], "MsgId already used");
@@ -48,11 +50,13 @@ contract CkIcp is ERC20, Ownable, Pausable, ReentrancyGuard {
     /// Burn input amount is demoninated in wei
     /// Burn output amount is denominated in ICP e8s
     function burn(uint256 amount, bytes32 principal, bytes32 subaccount) public whenNotPaused {
+        require(amount < (2**64 -1) * 10**(decimals() - ICP_TOKEN_PRECISION), "Amount too large");
         _burn(_msgSender(), amount);
         emit BurnToIcp(amount / 10**(decimals() - ICP_TOKEN_PRECISION), principal, subaccount);
     }
 
     function burnToAccountId(uint256 amount, bytes32 accountId) public whenNotPaused {
+        require(amount < (2**64 -1) * 10**(decimals() - ICP_TOKEN_PRECISION), "Amount too large");
         _burn(_msgSender(), amount);
         emit BurnToIcpAccountId(amount / 10**(decimals() - ICP_TOKEN_PRECISION), accountId);
     }

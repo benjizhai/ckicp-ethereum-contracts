@@ -8,8 +8,7 @@ Ethereum contracts to be owned by the ckICP main canister on ICP via tECDSA.
 - [x] ERC20 tokens of ICP on Ethereum
 - [x] Only the ckICP canister can mint
 - [x] Anyone can burn ckICP on ETH to get ICP on the IC blockchain
-- [ ] EIP-2612
-- [ ] EIP-2771
+- [x] EIP-2612
 
 ## Toolchain
 https://github.com/foundry-rs/foundry

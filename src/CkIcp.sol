@@ -2,12 +2,13 @@
 pragma solidity ^0.8.20;
 
 import "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
 import "openzeppelin-contracts/security/Pausable.sol";
 import "openzeppelin-contracts/security/ReentrancyGuard.sol";
 import "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 
-contract CkIcp is ERC20, Ownable, Pausable, ReentrancyGuard {
+contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable, ReentrancyGuard {
     using ECDSA for bytes32;
 
     uint8 public constant ICP_TOKEN_PRECISION = 8;
@@ -18,7 +19,8 @@ contract CkIcp is ERC20, Ownable, Pausable, ReentrancyGuard {
     event BurnToIcpAccountId(uint256 amount, bytes32 indexed accountId);
     
     constructor()
-        ERC20("ckICP - native ICP token on Ethereum", "ckICP")
+        ERC20("ckICP", "ckICP")
+        ERC20Permit("ckICP")
     {}
 
     /// # Admin functions accessible to ckICP canister only

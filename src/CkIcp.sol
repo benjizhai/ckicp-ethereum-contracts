@@ -39,7 +39,7 @@ contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable, ReentrancyGuard {
     /// left_padded_32byte_concat(amount, to, msgId, expiry, chainId, address(this))
     /// Safety note: won't be frontrun because `to` is specified
     /// Safety note: overflow not checked because minter can verify that prior to signing
-    function selfMint(uint256 amount, address to, uint256 msgid, uint32 expiry, bytes calldata signature) public whenNotPaused {
+    function selfMint(uint256 amount, address to, uint256 msgid, uint64 expiry, bytes calldata signature) public whenNotPaused {
         require(block.timestamp < expiry, "Signature expired");
         require(!used[msgid], "MsgId already used");
         require(_verifyOwnerSignature(

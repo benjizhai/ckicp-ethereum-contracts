@@ -53,12 +53,14 @@ contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable, ReentrancyGuard {
     /// Burn output amount is denominated in ICP e8s
     function burn(uint256 amount, bytes32 principal, bytes32 subaccount) public whenNotPaused {
         require(amount < (2**64 -1) * 10**(decimals() - ICP_TOKEN_PRECISION), "Amount too large");
+        require(amount % 10**(decimals() - ICP_TOKEN_PRECISION) == 0, "Amount must not have significant figures beyond ICP token precision");
         _burn(_msgSender(), amount);
         emit BurnToIcp(amount / 10**(decimals() - ICP_TOKEN_PRECISION), principal, subaccount);
     }
 
     function burnToAccountId(uint256 amount, bytes32 accountId) public whenNotPaused {
         require(amount < (2**64 -1) * 10**(decimals() - ICP_TOKEN_PRECISION), "Amount too large");
+        require(amount % 10**(decimals() - ICP_TOKEN_PRECISION) == 0, "Amount must not have significant figures beyond ICP token precision");
         _burn(_msgSender(), amount);
         emit BurnToIcpAccountId(amount / 10**(decimals() - ICP_TOKEN_PRECISION), accountId);
     }

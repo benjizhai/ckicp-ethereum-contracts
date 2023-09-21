@@ -7,6 +7,9 @@ import "openzeppelin-contracts/access/Ownable.sol";
 import "openzeppelin-contracts/security/Pausable.sol";
 import "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 
+/// Contract for the ERC20 token that represents ICP on Ethereum.
+/// The minter canister on the IC shall be the owner of this contract.
+/// This contract shall be deployed deterministically to have the same address on every chain.
 contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable {
     using ECDSA for bytes32;
 
@@ -33,9 +36,11 @@ contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable {
 
     /// # Public functions
     
-    /// Anyone can mint by providing a valid signature from the signer
+    /// Anyone can mint by providing a valid signature from the minter (the owner of this contract)
     /// The signature must be over the following message:
     /// left_padded_32byte_concat(amount, to, msgId, expiry, chainId, address(this))
+    /// Mint input amount is denominated in ICP e8s
+    /// Mint output amount is denominated in wei
     /// Safety note: won't be frontrun because `to` is specified
     /// Safety note: overflow not checked because minter can verify that prior to signing
     function selfMint(uint256 amount, address to, uint256 msgid, uint64 expiry, bytes calldata signature) public whenNotPaused {
@@ -52,14 +57,12 @@ contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable {
     /// Burn output amount is denominated in ICP e8s
     function burn(uint256 amount, bytes32 principal, bytes32 subaccount) public whenNotPaused {
         require(amount < (2**64 -1) * 10**(decimals() - ICP_TOKEN_PRECISION), "Amount too large");
-        require(amount % 10**(decimals() - ICP_TOKEN_PRECISION) == 0, "Amount must not have significant figures beyond ICP token precision");
         _burn(_msgSender(), amount);
         emit BurnToIcp(amount / 10**(decimals() - ICP_TOKEN_PRECISION), principal, subaccount);
     }
 
     function burnToAccountId(uint256 amount, bytes32 accountId) public whenNotPaused {
         require(amount < (2**64 -1) * 10**(decimals() - ICP_TOKEN_PRECISION), "Amount too large");
-        require(amount % 10**(decimals() - ICP_TOKEN_PRECISION) == 0, "Amount must not have significant figures beyond ICP token precision");
         _burn(_msgSender(), amount);
         emit BurnToIcpAccountId(amount / 10**(decimals() - ICP_TOKEN_PRECISION), accountId);
     }

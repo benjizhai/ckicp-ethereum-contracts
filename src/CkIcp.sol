@@ -20,10 +20,13 @@ contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable {
     event BurnToIcp(uint256 amount, bytes32 indexed principal, bytes32 indexed subaccount);
     event BurnToIcpAccountId(uint256 amount, bytes32 indexed accountId);
     
-    constructor()
+    /// When deploying, set the owner to the minter canister on the IC
+    constructor(address owner)
         ERC20("ICP token on Ethereum", "ICP")
         ERC20Permit("ICP token on Ethereum")
-    {}
+    {
+        _transferOwnership(owner);
+    }
 
     /// # Admin functions accessible to ckICP canister only
 

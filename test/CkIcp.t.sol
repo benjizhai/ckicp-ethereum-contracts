@@ -8,7 +8,7 @@ contract CkIcpTest is Test {
     CkIcp public ckicp;
 
     function ckIcpSetup() public {
-        ckicp = new CkIcp();
+        ckicp = new CkIcp(address(0x04));
     }
 
 }

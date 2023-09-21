@@ -5,10 +5,9 @@ import "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
 import "openzeppelin-contracts/security/Pausable.sol";
-import "openzeppelin-contracts/security/ReentrancyGuard.sol";
 import "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 
-contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable, ReentrancyGuard {
+contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable {
     using ECDSA for bytes32;
 
     uint8 public constant ICP_TOKEN_PRECISION = 8;

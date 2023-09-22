@@ -1,0 +1,52 @@
+type Arg = variant { Upgrade; Init : InitArg };
+type CanisterError = variant {
+  NoChildrenForCode;
+  CannotRegisterMultipleTimes;
+  CanisterKilled;
+  GeneralError : text;
+  UnknownOisyWalletAddress;
+  NoMoreCodes;
+  MaximumDepthReached;
+  CodeAlreadyRedeemed;
+  CodeNotFound;
+  NoCodeForII;
+};
+type CodeInfo = record {
+  codes_generated : nat64;
+  code : text;
+  codes_redeemed : nat64;
+};
+type EthAddressAmount = record {
+  transferred : bool;
+  eth_address : text;
+  amount : nat64;
+};
+type Info = record {
+  "principal" : principal;
+  code : text;
+  ethereum_address : text;
+  children : opt vec record { text; bool };
+};
+type InitArg = record { backend_canister_id : principal };
+type Result = variant { Ok; Err : CanisterError };
+type Result_1 = variant { Ok : CodeInfo; Err : CanisterError };
+type Result_2 = variant {
+  Ok : record { nat64; vec EthAddressAmount };
+  Err : CanisterError;
+};
+type Result_3 = variant { Ok : Info; Err : CanisterError };
+type Result_4 = variant { Ok : bool; Err : CanisterError };
+service : (Arg) -> {
+  add_admin : (principal) -> (Result);
+  add_codes : (vec text) -> (Result);
+  add_manager : (principal, text) -> (Result);
+  bring_caninster_back_to_life : () -> (Result);
+  generate_code : () -> (Result_1);
+  get_airdrop : (nat64) -> (Result_2);
+  get_code : () -> (Result_3) query;
+  has_redeemed : () -> (Result_4) query;
+  is_manager : () -> (bool) query;
+  kill_canister : () -> (Result);
+  put_airdrop : (nat64, EthAddressAmount) -> (Result);
+  redeem_code : (text) -> (Result_3);
+}

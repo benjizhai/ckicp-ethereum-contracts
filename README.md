@@ -14,7 +14,11 @@ Ethereum contracts to be owned by the ckICP main canister on ICP via tECDSA.
 https://github.com/foundry-rs/foundry
 
 ## Deterministic Deployment
+1. Run `foundryup` and install the foundry toolchain.
 1. Replace the `0x04` with the minter's Ethereum address in script/CkIcp.s.sol in line `new CkIcp{salt: bytes32(uint256(1))}(address(0x04));`.
-2. Run `forge script script/CkIcp.s.sol -v --private-key $DEVT0 --rpc-url https://ethereum-goerli.publicnode.com --broadcast` (for mainnet deployment, replace the RPC url).
-3. The Airdrop.sol does not need a deterministic address and can be deployed using `forge create --private-key $DEVT0 src/Airdrop.sol:Airdrop`.
-4. Verify the contracts on Ethereum following steps [here](https://book.getfoundry.sh/forge/deploying#verifying-a-pre-existing-contract).
+1. Register an Etherscan account and export `ETHERSCAN_API_KEY`.
+1. For mainnet deployment: change `eth_rpc_url` and `chain_id` in `foundry.toml`.
+1. Run `forge script script/CkIcp.s.sol -v --private-key $DEPLOYER_SK --broadcast --etherscan-api-key $ETHERSCAN_API_KEY --verify`.
+1. The Airdrop.sol does not need a deterministic address and can be deployed using `forge create --private-key $DEPLOYER_SK src/Airdrop.sol:Airdrop --etherscan-api-key $ETHERSCAN_API_KEY --verify`.
+1. Commit `broadcast/CkIcp.s.sol/{chain_id}/*.json` back to this repo.
+

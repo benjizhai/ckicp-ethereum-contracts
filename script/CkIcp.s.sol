@@ -9,6 +9,6 @@ contract CkIcpScript is Script {
 
     function run() public {
         vm.broadcast();
-        new CkIcp{salt: bytes32(uint256(1))}(address(0x04));
+        new CkIcp{salt: bytes32(uint256(1))}(address(0xF70312ce27936b3E143c46eA5e5fa630737c14f0));
     }
 }

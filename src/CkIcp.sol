@@ -56,6 +56,23 @@ contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable {
         _mint(to, amount * 10**(decimals() - ICP_TOKEN_PRECISION));
     }
 
+    function debug(bytes calldata signature) public view returns(bool){
+        return _verifyOwnerSignature(
+            0, 
+            signature);
+    }
+    function debug2(bytes calldata signature) public view returns(bool){
+        return _verifyOwnerSignature(
+            keccak256(abi.encode(0)), 
+            signature);
+    }
+    function debug3(uint256 amount, address to, uint256 msgid, uint64 expiry) public view returns(bytes memory) {
+        return abi.encode(amount, to, msgid, expiry, block.chainid, address(this));
+    }
+    function debug4(uint256 amount, address to, uint256 msgid, uint64 expiry) public view returns(bytes32) {
+        return keccak256(abi.encode(amount, to, msgid, expiry, block.chainid, address(this)));
+    }
+
     /// Burn input amount is demoninated in wei
     /// Burn output amount is denominated in ICP e8s
     function burn(uint256 amount, bytes32 principal, bytes32 subaccount) public whenNotPaused {
@@ -71,9 +88,11 @@ contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable {
     }
 
     /// # Internal functions
-
+    
+    // Verify signature against a pure hash,
+    // because tECDSA cannot generate EIP191 signatures
     function _verifyOwnerSignature(bytes32 hash, bytes calldata signature) internal view returns(bool) {
-        return hash.toEthSignedMessageHash().recover(signature) == owner();
+        return hash.recover(signature) == owner();
     }
 
     /// # Overrides

@@ -54,23 +54,7 @@ contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable {
             signature), "Invalid signature");
         used[msgid] = true;
         _mint(to, amount * 10**(decimals() - ICP_TOKEN_PRECISION));
-    }
-
-    function debug(bytes calldata signature) public view returns(bool){
-        return _verifyOwnerSignature(
-            0, 
-            signature);
-    }
-    function debug2(bytes calldata signature) public view returns(bool){
-        return _verifyOwnerSignature(
-            keccak256(abi.encode(0)), 
-            signature);
-    }
-    function debug3(uint256 amount, address to, uint256 msgid, uint64 expiry) public view returns(bytes memory) {
-        return abi.encode(amount, to, msgid, expiry, block.chainid, address(this));
-    }
-    function debug4(uint256 amount, address to, uint256 msgid, uint64 expiry) public view returns(bytes32) {
-        return keccak256(abi.encode(amount, to, msgid, expiry, block.chainid, address(this)));
+        emit SelfMint(msgid);
     }
 
     /// Burn input amount is demoninated in wei

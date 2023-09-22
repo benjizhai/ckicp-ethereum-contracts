@@ -20,10 +20,13 @@ contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable {
     event BurnToIcp(uint256 amount, bytes32 indexed principal, bytes32 indexed subaccount);
     event BurnToIcpAccountId(uint256 amount, bytes32 indexed accountId);
     
-    constructor()
+    /// When deploying, set the owner to the minter canister on the IC
+    constructor(address owner)
         ERC20("ICP token on Ethereum", "ICP")
         ERC20Permit("ICP token on Ethereum")
-    {}
+    {
+        _transferOwnership(owner);
+    }
 
     /// # Admin functions accessible to ckICP canister only
 
@@ -51,6 +54,7 @@ contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable {
             signature), "Invalid signature");
         used[msgid] = true;
         _mint(to, amount * 10**(decimals() - ICP_TOKEN_PRECISION));
+        emit SelfMint(msgid);
     }
 
     /// Burn input amount is demoninated in wei
@@ -68,9 +72,11 @@ contract CkIcp is ERC20, ERC20Permit, Ownable, Pausable {
     }
 
     /// # Internal functions
-
+    
+    // Verify signature against a pure hash,
+    // because tECDSA cannot generate EIP191 signatures
     function _verifyOwnerSignature(bytes32 hash, bytes calldata signature) internal view returns(bool) {
-        return hash.toEthSignedMessageHash().recover(signature) == owner();
+        return hash.recover(signature) == owner();
     }
 
     /// # Overrides

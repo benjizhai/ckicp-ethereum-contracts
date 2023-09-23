@@ -46,7 +46,7 @@ touch "$AIRDROP_CLAIMED_TXS"
 INTERVAL_SECS=300
 
 # Max number of transfers allowed in a single call to Airdrop.
-MAX_RECORDS_IN_A_BATCH=1
+MAX_RECORDS_IN_A_BATCH=20
 
 # Airdrop canister
 AIRDROP_CANISTER_ID=t7tos-nyaaa-aaaad-aadkq-cai

@@ -48,8 +48,8 @@ INTERVAL_SECS=300
 # Max number of transfers allowed in a single call to Airdrop.
 MAX_RECORDS_IN_A_BATCH=20
 
-# Airdrop canister
-AIRDROP_CANISTER_ID=t7tos-nyaaa-aaaad-aadkq-cai
+# Airdrop canister (can be set through env variable)
+AIRDROP_CANISTER_ID=${AIRDROP_CANISTER_ID:-t7tos-nyaaa-aaaad-aadkq-cai}
 
 # Used by printf to generate a file name.
 AIRDROP_JSON_PATTERN=airdop_json.%05d
@@ -157,7 +157,7 @@ while true; do
         # NUM=$(echo "$LIST" | wc -l)
         INDICES=$(echo "$TX_JSON" | jq '.[0]' | jq -nc '[inputs]' | sed -e 's/"//g')
         ADDRS=$(echo "$TX_JSON" | jq '.[1]' | jq -nc '[inputs]' | sed -e 's/"//g')
-        AMOUNTS=$(echo "$TX_JSON" | jq '.[2]' | jq -nc '[inputs]' | sed -e 's/"//g')
+        AMOUNTS=$(echo "$TX_JSON" | jq '.[2]' | jq -nc '[inputs]' | jq 'map(.+"0000000000")' | sed -e 's/"//g')
         echo "DEBUG: INDICES=$INDICES"
         echo "DEBUG: ADDRS=$ADDRS"
         echo "DEBUG: AMOUNTS=$AMOUNTS"

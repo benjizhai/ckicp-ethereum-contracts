@@ -10,20 +10,25 @@
 #               Lastly seth must import the private key first.
 #
 # AIRDROP_FROM  The address of the Airdrop contract
+#
+# PEM_FILE      Secret key of the identity to use for the call.
 
-AIRDROP_CLAIMED_JSON="airdrop_claimed.json"
-AIRDROP_CLAIMED_HASH="airdrop_claimed.hash"
+AIRDROP_CLAIMED_LOG="airdrop_claimed.log"
+AIRDROP_CLAIMED_TXS="airdrop_claimed.txs"
 INTERVAL_SECS=60
 
 # Max number of transfers allowed in a single call to Airdrop.
 MAX_RECORDS_IN_A_BATCH=20
+AIRDROP_CANISTER_ID=t7tos-nyaaa-aaaad-aadkq-cai
 
 test -z "$ETH_RPC_URL" && echo "Must set ETH_RPC_URL" && exit 1
 test -z "$ETH_FROM" && echo "Must set ETH_FROM" && exit 1
 test -z "$AIRDROP_FROM" && echo "Must set AIRDROP_FROM" && exit 1
+test -z "$PEM_FILE" && echo "Must set PEM_FILE" && exit 1
 
-# Make sure this file exists
-touch "$AIRDROP_CLAIMED_JSON"
+# Make sure these file exists
+touch "$AIRDROP_CLAIMED_LOG"
+touch "$AIRDROP_CLAIMED_TXS"
 
 # Sync the participant list by calling get_airdrop method on the Airdrop canister.
 #
@@ -40,10 +45,10 @@ touch "$AIRDROP_CLAIMED_JSON"
 function sync_participant_list() {
     # 1. Get latest airdrop list
     # TODO: call get_airdrop
-    # local LIST=$(icx https://ic0.app update --candid airdrop.did t7tos-nyaaa-aaaad-aadkq-cai get_airdrop '(0)' | idl2json | jq -c '.Ok|."1"|map([.eth_address, .amount])')
-
+    local LIST=$(icx --pem "$PEM_FILE" https://ic0.app update --candid airdrop.did "$AIRDROP_CANISTER_ID" get_airdrop '(0)' | idl2json | jq -c '.Ok|map([."0", ."1", ."2"])')
+    echo "DEBUG: LIST=$LIST" >>/dev/stderr
     # local LIST='[["0","0x2c91e73a358e6f0aff4b9200c8bad0d4739a70dd","100"],["1","0x2c91e73a358e6f0aff4b9200c8bad0d4739a70dd","100"]]'
-    local LIST='[["0","0x2c91e73a358e6f0aff4b9200c8bad0d4739a70dd","100"],["1","0x2c91e73a358e6f0aff4b9200c8bad0d4739a70dd","100"],["2","0x2c91e73a358e6f0aff4b9200c8bad0d4739a70dd","100"],["3","0x2c91e73a358e6f0aff4b9200c8bad0d4739a70dd","100"]]'
+    # local LIST='[["0","0x2c91e73a358e6f0aff4b9200c8bad0d4739a70dd","100"],["1","0x2c91e73a358e6f0aff4b9200c8bad0d4739a70dd","100"],["2","0x2c91e73a358e6f0aff4b9200c8bad0d4739a70dd","100"],["3","0x2c91e73a358e6f0aff4b9200c8bad0d4739a70dd","100"]]'
     if [[ -n "$LIST" ]]; then
         # 2. Find the last airdrop list file, if any
         local n=0
@@ -66,7 +71,7 @@ function sync_participant_list() {
             filename="$last_file"
         fi
         # 4. Compare LIST with claimed records, and return new records.
-        DIFF="$(diff <(jq -c .[] "$AIRDROP_CLAIMED_JSON") <(jq -c .[] "$filename"))"
+        DIFF="$(diff <(jq -c .[] "$AIRDROP_CLAIMED_LOG") <(jq -c .[] "$filename"))"
         if [[ -n "$DIFF" ]]; then
             # DIFF should be a 'NaN,N' line, and the rest lines starts with >
             local lines=$(echo "$DIFF" | wc -l)
@@ -75,22 +80,44 @@ function sync_participant_list() {
             if [[ "$lines" -eq "$((appends + 1))" && "$(echo "$DIFF" | head -n1)" =~ ^[0-9]*a ]]; then
                 echo "$DIFF" | tail -n$((lines - 1)) | sed -e 's/^> //' | head -n$MAX_RECORDS_IN_A_BATCH
             else
-                echo "ERROR: latest list in ${filename} is not an increment of $AIRDROP_CLAIMED_JSON" >/dev/stderr
+                echo "ERROR: latest list in ${filename} is not an increment of $AIRDROP_CLAIMED_LOG" >/dev/stderr
             fi
         fi
     fi
 }
 
 while true; do
-    echo 1. Syncing participant list...
-    LIST=$(sync_participant_list)
-    if [[ -z "$LIST" ]]; then
-        echo '   No new participants'
-    else
+    TX_JSON=$(tail -n1 $AIRDROP_CLAIMED_LOG)
+    TX_HASH=$(tail -n1 $AIRDROP_CLAIMED_TXS)
+    if [[ -n "$TX_HASH" && -n "$TX_JSON" ]]; then
+        echo "0. Checking previous TX $TX_HASH"
+        while true; do
+            BLOCK=$(seth receipt $TX_HASH blockNumber)
+            if [[ -z "$BLOCK" ]]; then
+                echo "   ERROR: transaction $TX_HASH failed! Need to resend!"
+                break
+            fi
+            LATEST=$(seth block-number)
+            CONFIRMATION=$((LATEST - BLOCK))
+            echo "   $CONFIRMATION confirmations"
+            if [[ "$CONFIRMATION" -gt 32 ]]; then
+                TX_JSON=
+                TX_HASH=
+                break
+            fi
+            sleep 30
+        done
+    fi
+    if [[ -z "$TX_JSON" ]]; then
+        echo -n 1. Syncing participant list
+        TX_JSON=$(sync_participant_list)
+        test -z "$TX_JSON" && echo '   No new participants'
+    fi
+    if [[ -n "$TX_JSON" ]]; then
         # NUM=$(echo "$LIST" | wc -l)
-        INDICES=$(echo "$LIST" | jq '.[0]' | jq -nc '[inputs]' | sed -e 's/"//g')
-        ADDRS=$(echo "$LIST" | jq '.[1]' | jq -nc '[inputs]' | sed -e 's/"//g')
-        AMOUNTS=$(echo "$LIST" | jq '.[2]' | jq -nc '[inputs]' | sed -e 's/"//g')
+        INDICES=$(echo "$TX_JSON" | jq '.[0]' | jq -nc '[inputs]' | sed -e 's/"//g')
+        ADDRS=$(echo "$TX_JSON" | jq '.[1]' | jq -nc '[inputs]' | sed -e 's/"//g')
+        AMOUNTS=$(echo "$TX_JSON" | jq '.[2]' | jq -nc '[inputs]' | sed -e 's/"//g')
         echo DEBUG: INDICES=$INDICES
         echo DEBUG: ADDRS=$ADDRS
         echo DEBUG: AMOUNTS=$AMOUNTS
@@ -103,23 +130,24 @@ while true; do
             if [[ "$ETH_GAS" =~ ^[0-9][0-9]*$ ]]; then
                 export ETH_GAS
                 echo 3. Sending the airdrop transaction with "$ETH_GAS" gas
-                BLOCK=$(seth publish "$TX")
-                if [[ "$BLOCK" =~ ^0x[0-9a-f]{64}$ ]]; then
-                    echo "   Sent. Block is $BLOCK"
-                    echo "$LIST" | jq -cn '[inputs]' >>"$AIRDROP_CLAIMED_JSON"
-                    echo "$BLOCK" >>"$AIRDROP_CLAIMED_HASH"
+                TX_HASH=$(seth publish "$TX")
+                if [[ "$TX_HASH" =~ ^0x[0-9a-f]{64}$ ]]; then
+                    echo "$TX_JSON" | jq -cn '[inputs]' >>"$AIRDROP_CLAIMED_LOG"
+                    echo "$TX_HASH" >>"$AIRDROP_CLAIMED_TXS"
+                    echo "   Sent. Transaction is $TX_HASH"
                     break
                 fi
             else
                 echo "   Gas estimation failure! (Please check remaining tokens in the Airdrop contract)"
             fi
-            echo "   Transaction not sent! will try again in 10 seconds."
-            sleep 10
+            echo "   Transaction NOT sent! Trying again in 60 seconds"
+            sleep 60
         done
     fi
-    # TODO: Call put_airdrop
-    indices=$(jq -c 'map(.[0])' "$AIRDROP_CLAIMED_JSON"|jq -cn '[inputs]' | jq -c add|sed -e 's/"//g' -e 's/,/;/g' -e 's/^\[/vec {/' -e 's/\]$/}/'
-
+    echo -n "4. Calling put_airdrop"
+    INDICES=$(jq -c 'map(.[0])' "$AIRDROP_CLAIMED_LOG" | jq -cn '[inputs]' | jq -c add | sed -e 's/"//g' -e 's/,/;/g' -e 's/^\[/vec {/' -e 's/\]$/}/')
+    # It is ok the following fails, because we'll always try again with all indices!
+    icx --pem "$PEM_FILE" https://ic0.app update --candid airdrop.did "$AIRDROP_CANISTER_ID" put_airdrop "($INDICES)"
     echo "   Sleep now. Resume in $INTERVAL_SECS seconds.."
     sleep "$INTERVAL_SECS"
 done

@@ -71,7 +71,6 @@ NUM_BLOCKS_PER_EPOCH=32
 # 4. If anything goes wrong, nothing is returned.
 function sync_participant_list() {
     # Get latest airdrop list
-    # TODO: call get_airdrop
     local LIST
     LIST=$(icx --pem "$PEM_FILE" https://ic0.app update --candid airdrop.did "$AIRDROP_CANISTER_ID" get_airdrop '(0)' | idl2json | jq -c '.Ok|map([."0", ."1", ."2"])')
     echo "DEBUG: LIST=$LIST" >>/dev/stderr
@@ -122,15 +121,21 @@ while true; do
     # This makes sure we either have succeeded all past transactions,
     # or we'll re-send the last one (if it is known to have failed)
     # until it becomes successful.
-    TX_JSON=$(tail -n1 $AIRDROP_CLAIMED_LOG)
+    TX_JSON=$(tail -n1 $AIRDROP_CLAIMED_LOG | jq -c '.[]')
     TX_HASH=$(tail -n1 $AIRDROP_CLAIMED_TXS)
     if [[ -n "$TX_HASH" && -n "$TX_JSON" ]]; then
         echo "0. Checking previous TX $TX_HASH"
         while true; do
-            BLOCK=$(seth receipt "$TX_HASH" blockNumber)
-            if [[ -z "$BLOCK" ]]; then
-                echo "   ERROR: transaction $TX_HASH failed! Need to resend!"
+            BLOCK=$(seth receipt --async "$TX_HASH" blockNumber 2>&1)
+            if [[ "$BLOCK" =~ "not found" ]]; then
+                echo "   ERROR: transaction $TX_HASH is not found! Need to resend!"
                 break
+            elif [[ ! "$BLOCK" =~ ^[0-9]+$ ]]; then
+                # other kind of error, e.g. network connection broke?
+                echo "   ERROR: $BLOCK"
+                echo "   Try again in 10 seconds"
+                sleep 10
+                continue
             fi
             LATEST=$(seth block-number)
             CONFIRMATION=$((LATEST - BLOCK))

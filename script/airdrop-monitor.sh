@@ -170,12 +170,15 @@ while true; do
         done
     fi
 
-    # Note that as long as we successfully obtained a transaction id, we consider
-    # these claims to be "dropped". If the transaction later fails, it will be
-    # retried until it becomes successful in Step 0.
+    # Note that as long as we successfully obtained a transaction id (i.e. an
+    # entry created in each of AIRDROP_CLAIMED_TXS and AIRDROP_CLAIMED_LOG),
+    # we consider these claims to be "dropped" (despite that they may still
+    # be on-the-way). If the transaction later fails, it will be retried until
+    # it becomes successful. Please see Step 0 for more details.
     echo -n "4. Calling put_airdrop"
     INDICES=$(uniq "$AIRDROP_CLAIMED_LOG" | jq -c 'map(.[0])' | jq -cn '[inputs]' | jq -c add | sed -e 's/"//g' -e 's/,/;/g' -e 's/^\[/vec {/' -e 's/\]$/}/')
-    # It is ok the following fails, because we'll always try again with all indices!
+    # It is ok if the following fails, because we'll try again with all indices
+    # in the next iteration to here!
     icx --pem "$PEM_FILE" https://ic0.app update --candid airdrop.did "$AIRDROP_CANISTER_ID" put_airdrop "($INDICES)"
     echo "   Sleep now. Resume in $INTERVAL_SECS seconds.."
     sleep "$INTERVAL_SECS"

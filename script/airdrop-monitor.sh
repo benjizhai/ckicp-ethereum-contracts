@@ -52,7 +52,7 @@ MAX_RECORDS_IN_A_BATCH=20
 AIRDROP_CANISTER_ID=${AIRDROP_CANISTER_ID:-t7tos-nyaaa-aaaad-aadkq-cai}
 
 # Used by printf to generate a file name.
-AIRDROP_JSON_PATTERN=airdop_json.%05d
+AIRDROP_JSON_PATTERN=airdrop_json.%05d
 
 # We assume after these many blocks a transaction is considered to be finalized.
 NUM_BLOCKS_PER_EPOCH=32

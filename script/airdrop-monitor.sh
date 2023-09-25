@@ -98,7 +98,7 @@ function sync_participant_list() {
             next_file="$last_file"
         fi
         # Compare LIST with claimed records, and return new records.
-        DIFF="$(diff <(cat "$AIRDROP_CLAIMED_LOG" | jq -c .[] | sort | uniq) <(jq -c .[] "$next_file" | sort | uniq))"
+        DIFF="$(diff <(cat "$AIRDROP_CLAIMED_LOG" | jq -c .[] | jq -cs 'unique|sort_by(.[0]|tonumber)' | jq -c .[]) <(jq -c .[] "$next_file"))"
         if [[ -n "$DIFF" ]]; then
             # DIFF should be first a 'NaN,N' line, and the rest lines starts with >
             local lines

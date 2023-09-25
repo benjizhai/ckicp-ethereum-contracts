@@ -137,6 +137,17 @@ while true; do
                 sleep 10
                 continue
             fi
+            # Check if it has failed
+            STATUS=$(seth receipt --async "$TX_HASH" status 2>&1)
+            if [[ "$STATUS" == "0" ]]; then
+                echo "   ERROR: transaction $TX_HASH has failed in execution. Will re-send!"
+                break
+            elif [[ ! "$STATUS" == "1" ]]; then
+                echo "   WARN: Unknown status '$STATUS'"
+                echo "   Try again in 10 seconds"
+                sleep 10
+                continue
+            fi
             LATEST=$(seth block-number)
             CONFIRMATION=$((LATEST - BLOCK))
             echo "   $CONFIRMATION confirmations"
@@ -157,7 +168,7 @@ while true; do
         # NUM=$(echo "$LIST" | wc -l)
         INDICES=$(echo "$TX_JSON" | jq '.[0]' | jq -nc '[inputs]' | sed -e 's/"//g')
         ADDRS=$(echo "$TX_JSON" | jq '.[1]' | jq -nc '[inputs]' | sed -e 's/"//g')
-	AMOUNTS=$(echo "$TX_JSON" | jq '.[2]' | jq -nc '[inputs]' | jq -c 'map(.+"0000000000")' | sed -e 's/"//g' -e 's/_//g')
+        AMOUNTS=$(echo "$TX_JSON" | jq '.[2]' | jq -nc '[inputs]' | jq -c 'map(.+"0000000000")' | sed -e 's/"//g' -e 's/_//g')
         echo "DEBUG: INDICES=$INDICES"
         echo "DEBUG: ADDRS=$ADDRS"
         echo "DEBUG: AMOUNTS=$AMOUNTS"
@@ -168,6 +179,8 @@ while true; do
             echo '   Created'
             ETH_GAS=$(seth estimate "$AIRDROP_FROM" "airdrop(address[],uint256[])" "${ADDRS}" "${AMOUNTS}")
             if [[ "$ETH_GAS" =~ ^[0-9][0-9]*$ ]]; then
+                # Give 1.1x buffer
+                ETH_GAS=$((ETH_GAS + ETH_GAS / 10))
                 export ETH_GAS
                 echo 3. Sending the airdrop transaction with "$ETH_GAS" gas
                 TX_HASH=$(seth publish "$TX")

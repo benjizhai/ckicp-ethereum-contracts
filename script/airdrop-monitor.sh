@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# This script monitors the Airdrop canister for new parcipants list,
+# This script monitors the Airdrop canister for new participants list,
 # and sends ethereum transaction to distribute ICP ERC20 tokens.
 #
 # Environment variables must be set:

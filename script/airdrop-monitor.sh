@@ -173,16 +173,13 @@ while true; do
         echo "DEBUG: ADDRS=$ADDRS"
         echo "DEBUG: AMOUNTS=$AMOUNTS"
         while true; do
-            echo 2. Creating the airdrop transaction...
+            echo 2. Estimating airdrop transaction gas fee...
             NONCE=$(seth nonce "$ETH_FROM")
-            TX=$(seth --nonce "$NONCE" -S/dev/null mktx "$AIRDROP_FROM" "airdrop(address[],uint256[])" "${ADDRS}" "${AMOUNTS}")
-            echo '   Created'
             ETH_GAS=$(seth estimate "$AIRDROP_FROM" "airdrop(address[],uint256[])" "${ADDRS}" "${AMOUNTS}")
+            export ETH_GAS
             if [[ "$ETH_GAS" =~ ^[0-9][0-9]*$ ]]; then
-                # Give 1.1x buffer
-                ETH_GAS=$((ETH_GAS + ETH_GAS / 10))
-                export ETH_GAS
                 echo 3. Sending the airdrop transaction with "$ETH_GAS" gas
+                TX=$(seth -S/dev/null --nonce="$NONCE" mktx "$AIRDROP_FROM" "airdrop(address[],uint256[])" "${ADDRS}" "${AMOUNTS}")
                 TX_HASH=$(seth publish "$TX")
                 if [[ "$TX_HASH" =~ ^0x[0-9a-f]{64}$ ]]; then
                     echo "$TX_JSON" | jq -cn '[inputs]' >>"$AIRDROP_CLAIMED_LOG"
